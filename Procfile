@@ -1,1 +1,1 @@
-web: gunicorn -b 0.0.0.0:$PORT dashboard.app:app.server
+web: gunicorn -b 0.0.0.0:$PORT app:app --workers 2

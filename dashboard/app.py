@@ -115,6 +115,18 @@ app.layout = html.Div([
 ])
 
 
+# --- Health endpoint for platform readiness checks ---
+try:
+    # The underlying Flask server is available as `app.server`
+    flask_app = getattr(app, 'server', None)
+    if flask_app is not None:
+        @flask_app.route('/health')
+        def _health():
+            return json.dumps({'status': 'ok'}), 200, {'Content-Type': 'application/json'}
+except Exception:
+    pass
+
+
 def make_price_figure(df_local, ema_period):
     # df_local expected with datetime index
     if df_local is None or df_local.empty:

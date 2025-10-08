@@ -1,0 +1,16 @@
+# Render service manifest for deploying the Dash app
+# Visit https://render.com/docs/deploy-manifest for more info
+services:
+  - type: web
+    name: ninjapy-dashboard
+    env: docker
+    repo: ""
+    branch: main
+    plan: starter
+    buildCommand: ""
+    startCommand: ""
+    envVars:
+      - key: PORT
+        value: "8050"
+      - key: HOST
+        value: "0.0.0.0"

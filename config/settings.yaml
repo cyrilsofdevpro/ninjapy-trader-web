@@ -1,0 +1,12 @@
+time_range:
+  start: "09:30"
+  end: "10:00"
+
+risk:
+  stop_loss: -450
+  profit_target: 500
+  breakeven_profit: 150
+
+strategy:
+  ema_period: 9
+  position_size: 1

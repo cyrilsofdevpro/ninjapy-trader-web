@@ -1,0 +1,5 @@
+backtrader==1.9.78.123
+pandas>=1.5.0
+dash==2.13.0
+plotly>=5.0.0
+gunicorn>=20.1.0

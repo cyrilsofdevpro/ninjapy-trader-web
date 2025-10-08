@@ -1,0 +1,2 @@
+datetime,event,side,price,size,reason
+2025-10-07T09:35:00,ENTRY,LONG,103.25,1,test

@@ -123,6 +123,23 @@ try:
         @flask_app.route('/health')
         def _health():
             return json.dumps({'status': 'ok'}), 200, {'Content-Type': 'application/json'}
+        
+        @flask_app.route('/download/<path:filename>')
+        def _download(filename):
+            # prevent path traversal by allowing only exact filenames in repo root that
+            # match our backtest_result_*.json pattern
+            base = Path(__file__).resolve().parents[1]
+            target = base / filename
+            try:
+                if not target.exists():
+                    return (json.dumps({'error': 'not found'}), 404, {'Content-Type': 'application/json'})
+                # simple whitelist: filename must start with backtest_result_ and end with .json
+                if not (filename.startswith('backtest_result_') and filename.endswith('.json')):
+                    return (json.dumps({'error': 'forbidden'}), 403, {'Content-Type': 'application/json'})
+                from flask import send_file
+                return send_file(str(target.resolve()), as_attachment=True, download_name=filename)
+            except Exception as e:
+                return (json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'})
 except Exception:
     pass
 
@@ -304,15 +321,12 @@ def refresh_tables(n):
                 eq_fig.add_trace(go.Scatter(x=xs, y=ys, mode='lines', name='Equity'))
                 eq_fig.update_layout(title='Equity Curve', template='plotly_dark', height=400)
 
-            # download link (serve the file via a data URI)
+            # download link: serve the saved JSON via a Flask endpoint so browsers
+            # can download it reliably instead of using a large data URI.
             try:
-                txt = json.dumps(jr)
-                b = txt.encode('utf8')
-                # base64 encode for data URL
-                import base64
-                payload = base64.b64encode(b).decode('ascii')
-                href = f"data:application/json;base64,{payload}"
-                download_area = html.A('Download latest backtest JSON', href=href, download=latest_job.name, className='btn btn-secondary')
+                fname = latest_job.name
+                href = f"/download/{fname}"
+                download_area = html.A('Download latest backtest JSON', href=href, className='btn btn-secondary')
             except Exception:
                 download_area = html.Div('Failed to build download link')
 

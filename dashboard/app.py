@@ -120,9 +120,15 @@ try:
     # The underlying Flask server is available as `app.server`
     flask_app = getattr(app, 'server', None)
     if flask_app is not None:
+        # enable CORS on the Flask app so downloads and API calls work cross-origin
+        try:
+            from flask_cors import CORS
+            CORS(flask_app, resources={r"/download/*": {"origins": "*"}, r"/health": {"origins": "*"}})
+        except Exception:
+            pass
         @flask_app.route('/health')
         def _health():
-            return json.dumps({'status': 'ok'}), 200, {'Content-Type': 'application/json'}
+            return json.dumps({'status': 'ok'}), 200, {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
         
         @flask_app.route('/download/<path:filename>')
         def _download(filename):
@@ -136,8 +142,11 @@ try:
                 # simple whitelist: filename must start with backtest_result_ and end with .json
                 if not (filename.startswith('backtest_result_') and filename.endswith('.json')):
                     return (json.dumps({'error': 'forbidden'}), 403, {'Content-Type': 'application/json'})
-                from flask import send_file
-                return send_file(str(target.resolve()), as_attachment=True, download_name=filename)
+                from flask import send_file, make_response
+                resp = make_response(send_file(str(target.resolve()), as_attachment=True, download_name=filename))
+                # manual CORS header so clients can download from other origins
+                resp.headers['Access-Control-Allow-Origin'] = '*'
+                return resp
             except Exception as e:
                 return (json.dumps({'error': str(e)}), 500, {'Content-Type': 'application/json'})
 except Exception:
@@ -326,7 +335,23 @@ def refresh_tables(n):
             try:
                 fname = latest_job.name
                 href = f"/download/{fname}"
-                download_area = html.A('Download latest backtest JSON', href=href, className='btn btn-secondary')
+                download_area = html.Div([
+                    html.A('Download latest backtest JSON', href=href, className='btn btn-secondary'),
+                ])
+
+                # Also look for strategy export files in the repo root and show
+                # explicit download buttons for them (common names/extensions).
+                strategy_buttons = []
+                patterns = ['strategy*.strategy', 'strategy*.zip', '*strategy*.zip', '*strategy*.strategy', '*strategy*.*']
+                for pat in patterns:
+                    for sp in sorted(base.glob(pat)):
+                        # avoid showing the backtest files again
+                        if sp.name == fname:
+                            continue
+                        strategy_buttons.append(html.A(f'Download {sp.name}', href=f'/download/{sp.name}', className='btn btn-info', style={'marginLeft': '8px'}))
+
+                if strategy_buttons:
+                    download_area.children.extend([html.Div(strategy_buttons, style={'marginTop': '8px'})])
             except Exception:
                 download_area = html.Div('Failed to build download link')
 

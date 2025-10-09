@@ -4,3 +4,6 @@ dash==2.13.0
 plotly>=5.0.0
 gunicorn>=20.1.0
 flask-cors>=3.0.10
+# Pin Flask and Werkzeug to versions compatible with Dash 2.13.0
+Flask==2.2.5
+Werkzeug==2.2.3

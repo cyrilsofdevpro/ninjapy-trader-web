@@ -1,0 +1,12 @@
+{
+  "python.defaultInterpreterPath": "C:/Users/Cyril Sofdev/Documents/Weather App/venv/Scripts/python.exe",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}",
+    "C:/Users/Cyril Sofdev/Documents/Weather App/venv/Lib/site-packages"
+  ],
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.useImportHeuristic": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": false
+}

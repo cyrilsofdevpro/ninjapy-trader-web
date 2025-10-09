@@ -335,23 +335,22 @@ def refresh_tables(n):
             try:
                 fname = latest_job.name
                 href = f"/download/{fname}"
-                download_area = html.Div([
-                    html.A('Download latest backtest JSON', href=href, className='btn btn-secondary'),
-                ])
+
+                # Build a list of download elements (robustly) instead of mutating
+                # .children which may be None according to the type stubs.
+                links = [html.A('Download latest backtest JSON', href=href, className='btn btn-secondary')]
 
                 # Also look for strategy export files in the repo root and show
                 # explicit download buttons for them (common names/extensions).
-                strategy_buttons = []
                 patterns = ['strategy*.strategy', 'strategy*.zip', '*strategy*.zip', '*strategy*.strategy', '*strategy*.*']
                 for pat in patterns:
                     for sp in sorted(base.glob(pat)):
                         # avoid showing the backtest files again
                         if sp.name == fname:
                             continue
-                        strategy_buttons.append(html.A(f'Download {sp.name}', href=f'/download/{sp.name}', className='btn btn-info', style={'marginLeft': '8px'}))
+                        links.append(html.A(f'Download {sp.name}', href=f'/download/{sp.name}', className='btn btn-info', style={'marginLeft': '8px'}))
 
-                if strategy_buttons:
-                    download_area.children.extend([html.Div(strategy_buttons, style={'marginTop': '8px'})])
+                download_area = html.Div(links)
             except Exception:
                 download_area = html.Div('Failed to build download link')
 
@@ -378,11 +377,12 @@ if __name__ == "__main__" and os.environ.get('DISABLE_DASH_RUN', '') != '1':
         debug = False if debug_env == '' else bool(debug_env)
     # prefer run_server which accepts host/port across Dash versions
     try:
-        app.run_server(debug=debug, host=host, port=port)
+        # Some type checkers expect port as str for certain run() overloads; pass as string
+        app.run_server(debug=debug, host=host, port=str(port))
     except Exception:
         # older Dash versions might expose run instead
         try:
-            app.run(debug=debug, port=port)
+            app.run(debug=debug, port=str(port))
         except Exception as e:
             print('Failed to start Dash app:', e)
     
